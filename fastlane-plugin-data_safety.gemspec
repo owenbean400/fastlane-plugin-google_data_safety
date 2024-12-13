@@ -1,10 +1,10 @@
 lib = File.expand_path("lib", __dir__)
 $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
-require 'fastlane/plugin/data_safety/version'
+require 'fastlane/plugin/google_data_safety/version'
 
 Gem::Specification.new do |spec|
   spec.name          = 'fastlane-plugin-google_data_safety'
-  spec.version       = Fastlane::DataSafety::VERSION
+  spec.version       = Fastlane::GoogleDataSafety::VERSION
   spec.author        = 'Owen Bean'
   spec.email         = 'owenbean400@gmail.com'
 

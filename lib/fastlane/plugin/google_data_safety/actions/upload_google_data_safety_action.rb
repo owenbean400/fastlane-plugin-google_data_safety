@@ -1,12 +1,12 @@
 require 'fastlane/action'
 require 'googleauth'
-require_relative '../helper/data_safety_helper'
+require_relative '../helper/upload_google_data_safety_helper'
 require 'net/http'
 require 'json'
 
 module Fastlane
   module Actions
-    class DataSafetyAction < Action
+    class UploadGoogleDataSafetyAction < Action
       def self.run(params)
 
         csv_content = self.csv_file_content(params: params)
