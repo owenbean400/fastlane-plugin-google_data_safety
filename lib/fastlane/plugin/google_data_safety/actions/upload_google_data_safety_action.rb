@@ -90,9 +90,6 @@ module Fastlane
           end
         end
 
-        puts "packageName: #{package_name}"
-        puts "CSV: #{csv_content}"
-
         uri = URI("https://androidpublisher.googleapis.com/androidpublisher/v3/applications/#{package_name}/dataSafety")
 
         request = Net::HTTP::Post.new(uri)
