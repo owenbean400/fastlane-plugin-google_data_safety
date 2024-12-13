@@ -1,6 +1,6 @@
-# google_data_safety plugin
+# Fastlane google_data_safety Plugin
 
-[![fastlane Plugin Badge](https://rawcdn.githack.com/fastlane/fastlane/master/fastlane/assets/plugin-badge.svg)](https://rubygems.org/gems/fastlane-plugin-data_safety)
+[![fastlane Plugin Badge](https://rawcdn.githack.com/fastlane/fastlane/master/fastlane/assets/plugin-badge.svg)](https://rubygems.org/gems/fastlane-plugin-google_data_safety)
 
 ## Getting Started
 
@@ -12,28 +12,37 @@ fastlane add_plugin google_data_safety
 
 ## About google_data_safety
 
-Google safety data sheet for automation of safety form
+Google safety data sheet help with automation of data safety form on Google Play Console. Review [Google policy data safety section](https://support.google.com/googleplay/android-developer/answer/10787469?hl=en) for more information about the form.
 
-**Note to author:** Add a more detailed description about this plugin here. If your plugin contains multiple actions, make sure to mention them here.
+## upload_google_data_safety
 
-## Example
+### 2 Examples
 
-Check out the [example `Fastfile`](fastlane/Fastfile) to see how to use this plugin. Try it by cloning the repo, running `fastlane install_plugins` and `bundle exec fastlane test`.
-
-**Note to author:** Please set up a sample project to make it easy for users to explore what your plugin does. Provide everything that is necessary to try out the plugin in this project (including a sample Xcode/Android project if necessary)
-
-## Run tests for this plugin
-
-To run both the tests, and code style validation, run
-
-```
-rake
+```ruby
+upload_google_data_safety(
+    csv_file: "data_safety_export.csv",
+    package_name: "my.package.name",
+    json_key: "key.json"
+)
 ```
 
-To automatically fix many of the styling issues, use
+```ruby
+upload_google_data_safety(
+    csv_content: "uestion ID (machine readable),Response ID (machine readable),Response value,Answer requirement,Human-friendly question label\n ...",
+    package_name: "my.package.name",
+    json_key_data: "..."
+)
 ```
-rubocop -a
-```
+
+### Parameters
+
+| Key | Description |
+| --- | ----------- |
+| json_key_data | The raw service account JSON data used to authenticate with Google |
+| json_key | The path to a file containing service account JSON, used to authenticate with Google |
+| package_name | The package name of the application to use |
+| csv_file | The path to a file containing Google data safety csv |
+| csv_content | The raw csv data used for Google data safety |
 
 ## Issues and Feedback
 
