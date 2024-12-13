@@ -28,7 +28,7 @@ upload_google_data_safety(
 
 ```ruby
 upload_google_data_safety(
-    csv_content: "uestion ID (machine readable),Response ID (machine readable),Response value,Answer requirement,Human-friendly question label\n ...",
+    csv_content: "Question ID (machine readable),Response ID (machine readable),Response value,Answer requirement,Human-friendly question label\n ...",
     package_name: "my.package.name",
     json_key_data: "..."
 )
