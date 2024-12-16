@@ -10,6 +10,10 @@ module Fastlane
     class PromptCreateDataSafetyCsvAction < Action
       def self.run(params)
 
+        if !UI.interactive?
+          UI.error("Prompts questions can only display in interactive.")
+        end
+
         csv_file_path = params[:csv_file]
         csv_file_path = File.expand_path(csv_file_path)
 
