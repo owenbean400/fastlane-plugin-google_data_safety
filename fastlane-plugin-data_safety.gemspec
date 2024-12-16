@@ -8,8 +8,8 @@ Gem::Specification.new do |spec|
   spec.author        = 'Owen Bean'
   spec.email         = 'owenbean400@gmail.com'
 
-  spec.summary       = 'Google safety data sheet for automation of safety form'
-  # spec.homepage      = "https://github.com/<GITHUB_USERNAME>/fastlane-plugin-data_safety"
+  spec.summary       = 'Google safety data Fastlane plugin for automation.'
+  spec.homepage      = "https://github.com/owenbean400/fastlane-plugin-google_data_safety"
   spec.license       = "MIT"
 
   spec.files         = Dir["lib/**/*"] + %w(README.md LICENSE)
@@ -17,10 +17,6 @@ Gem::Specification.new do |spec|
   spec.metadata['rubygems_mfa_required'] = 'true'
   spec.required_ruby_version = '>= 2.6'
 
-  # Don't add a dependency to fastlane or fastlane_re
-  # since this would cause a circular dependency
-
-  # spec.add_dependency 'your-dependency', '~> 1.0.0'
   spec.add_dependency 'googleauth', '~> 1.8.1'
 
 end
