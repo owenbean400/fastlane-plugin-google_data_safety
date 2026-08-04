@@ -1,13 +1,22 @@
 ## 0.3.0 Release Notes
 
-- Added input validation with reprompt
-  - Yes or no answers must be "yes", "y", "true", or "t" for yes; and "no", "n", "false", or "f" for no. Other input cause reprompt to user for answer.
-  - Question for yes, yes 90 days, and no require "yes", "y", "true", or "t" for yes; "90" or "ninty" for 90 days; and "no", "n", "false", or "f" for no. Other input cause reprompt to user for answer.
-  - URL answers must be follow URL convention. Other input cause reprompt to user for answer.
-  - Open answers requires a non empty answer. Empty answer cause reprompt to user for answer.
-- Fix missing in-app search history data collection question
-- Fix .gemspec file name
-- Fix unknown directory by creating missing directories
-- CSV input sanitation (OWASP CSV Injection)[https://owasp.org/www-community/attacks/CSV_Injection]
-- Update googleauth gem dependency to expand to greater than 1.8.1 version
-- Add debug on upload_google_data_safety action for response body output in logs
+### Added
+- Added input validation with automatic re-prompts.
+  - Yes/No questions now accept only `yes`, `y`, `true`, or `t` for **Yes**, and `no`, `n`, `false`, or `f` for **No**. Invalid input prompts the user to try again.
+  - Questions with **Yes / 90 Days / No** options now accept:
+    - `yes`, `y`, `true`, or `t` for **Yes**
+    - `90` or `ninety` for **90 Days**
+    - `no`, `n`, `false`, or `f` for **No**
+    Invalid input prompts the user to try again.
+  - URL responses must be valid URLs. Invalid input prompts the user to enter a valid URL.
+  - Open-ended responses now require a non-empty answer. Empty responses prompt the user to try again.
+- Added debug logging for the `upload_google_data_safety` action to include the response body in logs.
+
+### Changed
+- Updated the `googleauth` gem dependency to allow versions greater than `1.8.1`.
+
+### Fixed
+- Added the missing in-app search history data collection question.
+- Corrected the `.gemspec` filename.
+- Fixed an issue where missing directories were not created automatically.
+- Sanitized CSV input to mitigate [OWASP CSV Injection](https://owasp.org/www-community/attacks/CSV_Injection).
