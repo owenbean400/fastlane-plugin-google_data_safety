@@ -8,8 +8,12 @@ require 'csv'
 module Fastlane
   module Actions
     class PromptCreateDataSafetyCsvAction < Action
-      def self.run(params)
+      FORMULA_CHARS = %w[= + - @].freeze
 
+      # Run the prompt_create_data_safety_csv action.
+      #
+      # @param param [hash] Fastlane parameters
+      def self.run(params)
         if !UI.interactive?
           UI.error("Prompts questions can only display in interactive.")
         end
@@ -24,24 +28,26 @@ module Fastlane
 
         template_data = Helper::PromptCreateDataSafetyHelper.template_array()
 
-        template_data.each_with_index do | row |
+        safety_data = template_data.each_with_index do | row |
             hash_key = "#{row[0]},#{row[1]}"
             if hash.key?(hash_key)
                 row[2] = hash[hash_key]
             end
         end
 
-        CSV.open(csv_file_path, "w") do |csv|
-          template_data.each do |row|
-              csv << row
-          end
-        end
+        self.saveCsvFile(data: safety_data, csv_file_path: csv_file_path)
       end
 
+      # Array of valid answer strings for true.
       def self.valid_true_answers = ["y", "yes", "true", "t"]
+      # Array of valid answer strings for false.
       def self.valid_false_answers = ["n", "no", "false", "f"]
+      # Array of valid answer strings for ninety days selection (delete account data).
       def self.valid_90_day_answers = ["90", "ninety"]
 
+      # Displays terminal header of Fastlane action and about the upcoming prompts.
+      #
+      # @param csv_file [String] The CSV file location that display to user where the file will be saved in
       def self.headerDisplay(csv_file: nil)
         UI.important("")
         UI.important("   ____                   _        ____        _          ____         __      _         ")
@@ -58,6 +64,9 @@ module Fastlane
         UI.important("")
       end
 
+      # Prompt questions for Google Data Safety sheet.
+      # 
+      # @param hash [hash] The hash to save data of answers to questions
       def self.startingQuestion(hash: nil)
         isDataInputAppInfo = self.promptForAnswerBoolean(
             question: "Does your app collect or share any of the required user data types?",
@@ -198,6 +207,9 @@ module Fastlane
         end
       end
 
+      # Prompt question data type group question for Google Data Safety sheet.
+      # 
+      # @param hash [hash] The hash to save data of answers to questions
       def self.questionDataInfo(hash: nil)
         UI.important("*** Below questions will be asked about location data ***")
         self.questionDataType(title: "approximate location", code: "PSL_APPROX_LOCATION", group_code: "PSL_DATA_TYPES_LOCATION", hash: hash)
@@ -266,6 +278,12 @@ module Fastlane
         self.questionDataType(title: "device or other IDs", code: "PSL_DEVICE_ID", group_code: "PSL_DATA_TYPES_IDENTIFIERS", hash: hash)
       end
 
+      # Prompt question of a specific data type about data sharing and data collection for Google Data Safety sheet.
+      # 
+      # @param title [String] The data type title
+      # @param code [String] Google Data Safety code name for CSV file format
+      # @param group_code [String] Google Data Safety group code name for CSV file format
+      # @param hash [hash] The hash to save data of answers to questions
       def self.questionDataType(title: "", code: "", group_code: "", hash: nil)
         isDataInputCollectOrShare = self.promptForAnswerBoolean(
           question: "Is #{title} data being collected or shared?",
@@ -282,7 +300,6 @@ module Fastlane
             response_id: "PSL_DATA_USAGE_ONLY_SHARED",
             is_false_blank: true)
 
-          # Data Shared Question
           if isDataInputShared
               self.promptForAnswerBoolean(
                 question: "Is #{title} shared for app functionality?",
@@ -341,14 +358,13 @@ module Fastlane
             response_id: "PSL_DATA_USAGE_ONLY_COLLECTED",
             is_false_blank: true)
 
-          # Data Collection Question
           if isDataInputCollected
               self.promptForAnswerBoolean(
                 question: "Is #{title} data processed ephemerally?",
                 hash: hash,
                 question_id: "PSL_DATA_USAGE_RESPONSES:#{code}:PSL_DATA_USAGE_EPHEMERAL",
                 response_id: "",
-                is_false_blank: true)
+                is_false_blank: false)
 
               isDataInputRequired = self.promptForAnswerBoolean(
                 question: "Is #{title} data required for your app?",
@@ -415,6 +431,42 @@ module Fastlane
         end
       end
 
+      # Save CSV file with data sanitation.
+      #
+      # @param data [hash] Google Data Safety hash of CSV content
+      # @param csv_file_path [String] CSV file path to save file at
+      def self.saveCsvFile(data: nil, csv_file_path: "")
+        FileUtils.mkdir_p(File.dirname(csv_file_path))
+
+        CSV.open(csv_file_path, "w") do |csv|
+          data.each do |row|
+            sanitized_row = row.map do |cell|
+              if cell.is_a?(String)
+                cleaned = cell.gsub(/[\t\r\n]/, '').strip
+
+                if cleaned.lstrip.start_with?(*FORMULA_CHARS)
+                  cleaned = "'#{cleaned}"
+                end
+
+                cleaned
+              else
+                cell
+              end
+            end
+
+            csv << sanitized_row
+          end
+        end
+      end
+
+      # Prompt question to terminal for a yes or no answer. Reprompt user if answer is not a valid yes or no.
+      #
+      # @param question [String] The question that displays in terminal
+      # @param hash [hash] The hash data for Google Data Safety.
+      # @param question_id [String] The question id to add in the hash data. Review CSV file from Google Data Safety sheet for more details.
+      # @param response_id [String] The response id to add in the hash data. Review CSV file from Google Data Safety sheet for more details.
+      # @param is_false_blank [Boolean] Whether the false answer should be false or blank in CSV file. It is dependent on the question ID and response ID for Google Data Safety sheet format.
+      # @return [Boolean] The user's answer to the question
       def self.promptForAnswerBoolean(question: "", hash: nil, question_id: nil, response_id: "", is_false_blank: false)
         answer = UI.input(question + " Y/N")
 
@@ -432,6 +484,13 @@ module Fastlane
         end
       end
 
+      # Prompt question to terminal for a string answer. Reprompt user if answer is empty string.
+      #
+      # @param question [String] The question that displays in terminal
+      # @param hash [hash] The hash data for Google Data Safety
+      # @param question_id [String] The question id to add in the hash data. Review CSV file from Google Data Safety sheet for more details.
+      # @param response_id [String] The response id to add in the hash data. Review CSV file from Google Data Safety sheet for more details.
+      # @return [String] The user's answer to question
       def self.promptForAnswer(question: "", hash: nil, question_id: nil, response_id: "")
         answer = UI.input(question)
 
@@ -444,6 +503,13 @@ module Fastlane
         return answer
       end
 
+      # Prompt question to terminal for URL answer. Reprompt user if answer is not a valid URL.
+      #
+      # @param question [String] The question that displays in terminal
+      # @param hash [hash] The hash data for Google Data Safety
+      # @param question_id [String] The question id to add in the hash data. Review CSV file from Google Data Safety sheet for more details.
+      # @param response_id [String] The response id to add in the hash data. Review CSV file from Google Data Safety sheet for more details.
+      # @return [String] The user's answer to question
       def self.promptForUrl(question: "", hash: nil, question_id: nil, response_id: "")
         answer = UI.input(question)
 
@@ -456,13 +522,23 @@ module Fastlane
         return answer
       end
 
-      def self.validUrl?(string)
-        uri = URI.parse(string)
+      # Detect if URL is valid format.
+      #
+      # @param url [String] The url to validate
+      # @return [Boolean] The url is valid
+      def self.validUrl?(url)
+        uri = URI.parse(url)
         uri.is_a?(URI::HTTP) && !uri.host.nil?
       rescue URI::InvalidURIError
         false
       end
 
+      # Prompt question and answer to Google Data Safety hash
+      #
+      # @param hash [hash] The hash data for Google Data Safety
+      # @param question_id [String] The question id to add in the hash data. Review CSV file from Google Data Safety sheet for more details.
+      # @param response_id [String] The response id to add in the hash data. Review CSV file from Google Data Safety sheet for more details.
+      # @param value [String] The answer value
       def self.addToHash(hash: nil, question_id: nil, response_id: "", value: nil)
         if !value.nil? && !hash.nil?
             hash["#{question_id},#{response_id}"] = value

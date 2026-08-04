@@ -40,13 +40,14 @@ upload_google_data_safety(
 
 #### Parameters
 
-| Key | Description |
-| --- | ----------- |
-| json_key_data | The raw service account JSON data used to authenticate with Google |
-| json_key | The path to a file containing service account JSON, used to authenticate with Google |
-| package_name | The package name of the application to use |
-| csv_file | The path to a file containing Google data safety csv |
-| csv_content | The raw csv data used for Google data safety |
+| Key           | Environment Variable | Description                                                                          |
+| ------------- | -------------------- | ------------------------------------------------------------------------------------ |
+| json_key_data | JSON_KEY_DATA        | The raw service account JSON data used to authenticate with Google                   |
+| json_key      | JSON_KEY_FILE        | The path to a file containing service account JSON, used to authenticate with Google |
+| package_name  | PACKAGE_NAME         | The package name of the application to use                                           |
+| csv_file      | CSV_FILE             | The path to a file containing Google data safety csv                                 |
+| csv_content   | CSV_CONTENT          | The raw csv data used for Google data safety                                         |
+| debug         | DEBUG                | Provide debug log messaging                                                          |
 
 ### prompt_create_data_safety_csv
 
@@ -63,9 +64,9 @@ prompt_create_data_safety_csv(
 
 #### Parameters
 
-| Key | Description |
-| --- | ----------- |
-| csv_file | The path to save csv file for upload to Google Play Console |
+| Key      | Environment Variable | Description                                                 |
+| -------- | -------------------- | ----------------------------------------------------------- |
+| csv_file | CSV_FILE             | The path to save csv file for upload to Google Play Console |
 
 #### Issue reporting
 

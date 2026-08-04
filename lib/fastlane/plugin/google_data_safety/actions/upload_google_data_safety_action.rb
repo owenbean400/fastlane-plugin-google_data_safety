@@ -17,7 +17,13 @@ module Fastlane
 
         access_token = body["access_token"]
 
-        self.send_data_safety_sheet(package_name: params[:package_name], auth_token: access_token, csv_content: csv_content)
+        debug = false
+
+        if !params[:debug].nil?
+          debug = params[:debug]
+        end
+
+        self.send_data_safety_sheet(package_name: params[:package_name], auth_token: access_token, csv_content: csv_content, debug: debug)
 
       end
 
@@ -79,7 +85,7 @@ module Fastlane
         token
       end
 
-      def self.send_data_safety_sheet(package_name: nil, auth_token: nil, csv_content: nil)
+      def self.send_data_safety_sheet(package_name: nil, auth_token: nil, csv_content: nil, debug: false)
         if package_name.nil?
           if UI.interactive?
             UI.important("To not be asked package name, you can specify it using 'package_name'.")
@@ -110,6 +116,11 @@ module Fastlane
             UI.error("Bad request to upload Google Data Safety sheet.")
           else
             UI.error("Google Data Safety sheet upload error with API")
+          end
+
+          if debug
+            UI.important("Google Data Safety API response body")
+            UI.important(response.body)
           end
         end
 
@@ -168,6 +179,13 @@ module Fastlane
             description: "Json key data for service account authentication",
             optional: true,
             type: Hash
+          ),
+          FastlaneCore::ConfigItem.new(
+            key: :debug,
+            env_name: "DEBUG",
+            description: "Set to debug mode for troubleshooting",
+            optional: true,
+            type: Boolean
           ),
         ]
       end

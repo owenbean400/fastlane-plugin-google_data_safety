@@ -17,5 +17,5 @@ Gem::Specification.new do |spec|
   spec.metadata['rubygems_mfa_required'] = 'true'
   spec.required_ruby_version = '>= 2.6'
 
-  spec.add_dependency 'googleauth', '~> 1.8.1'
+  spec.add_dependency 'googleauth', '>= 1.8.1'
 end

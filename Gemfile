@@ -21,6 +21,7 @@ gem 'rubocop-require_tools'
 # SimpleCov is a code coverage analysis tool for Ruby.
 gem 'simplecov'
 
+# Google authentication library
 gem 'googleauth'
 
 gemspec
