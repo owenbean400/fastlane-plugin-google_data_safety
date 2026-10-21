@@ -3,6 +3,7 @@ require 'googleauth'
 require_relative '../helper/upload_google_data_safety_helper'
 require 'net/http'
 require 'json'
+require 'stringio'
 
 module Fastlane
   module Actions
@@ -53,23 +54,11 @@ module Fastlane
       end
 
       def self.service_account_authentication(params: nil)
-        unless params[:json_key] || params[:json_key_data]
-          if UI.interactive?
-            UI.important("To not be asked about this value, you can specify it using 'json_key'")
-            json_key_path = UI.input("The service account json file used to authenticate with Google: ")
-            json_key_path = File.expand_path(json_key_path)
-
-            UI.user_error!("Could not find service account json file at path '#{json_key_path}'") unless File.exist?(json_key_path)
-            params[:json_key] = json_key_path
-          else
-            UI.user_error!("Could not load Google authentication. Make sure it has been added as an environment variable in 'json_key' or 'json_key_data'")
-          end
-        end
-
         if params[:json_key]
-          service_account_json = File.open(File.expand_path(params[:json_key]))
+          service_account_json = StringIO.new(File.read(File.expand_path(params[:json_key])))
         elsif params[:json_key_data]
-          service_account_json = StringIO.new(params[:json_key_data])
+          data = params[:json_key_data]
+          service_account_json = StringIO.new(data.is_a?(String) ? data : JSON.generate(data))
         end
 
         service_account_json
@@ -78,7 +67,22 @@ module Fastlane
       def self.get_google_auth(service_account_json: nil)
         scope = 'https://www.googleapis.com/auth/androidpublisher'
 
-        auth = Google::Auth::ServiceAccountCredentials.make_creds(json_key_io: service_account_json, scope: scope)
+        auth = if service_account_json
+                 credentials = JSON.parse(service_account_json.read)
+                 service_account_json.rewind
+                 case credentials['type']
+                 when 'external_account'
+                   Google::Auth::ExternalAccount::Credentials.make_creds(json_key_io: service_account_json, scope: scope)
+                 when 'authorized_user'
+                   Google::Auth::UserRefreshCredentials.make_creds(json_key_io: service_account_json, scope: scope)
+                 when 'service_account'
+                   Google::Auth::ServiceAccountCredentials.make_creds(json_key_io: service_account_json, scope: scope)
+                 else
+                   UI.user_error!('Unsupported Google credential type. Use service_account, external_account or authorized_user credentials.')
+                 end
+               else
+                 Google::Auth.get_application_default(scope)
+               end
 
         token = auth.fetch_access_token!
 
@@ -103,25 +107,18 @@ module Fastlane
         request["Content-Type"] = "application/json"
         request.body = { safetyLabels: csv_content }.to_json
 
-        response = Net::HTTP.start(uri.hostname, uri.port, use_ssl: uri.scheme = 'https') do | http |
+        response = Net::HTTP.start(uri.hostname, uri.port, use_ssl: true, open_timeout: 30, read_timeout: 30, write_timeout: 30) do | http |
           http.request(request)
         end
 
         if response.is_a?(Net::HTTPSuccess)
           UI.success("Google Safety Data sheet has been uploaded!")
         else
-          if response.is_a?(Net::HTTPUnauthorized)
-            UI.error("Unauthorized request to upload Google Data Safety sheet.")
-          elsif response.is_a?(Net::HTTPBadRequest)
-            UI.error("Bad request to upload Google Data Safety sheet.")
-          else
-            UI.error("Google Data Safety sheet upload error with API")
-          end
-
           if debug
             UI.important("Google Data Safety API response body")
             UI.important(response.body)
           end
+          UI.user_error!("Google Data Safety upload failed (HTTP #{response.code}); declaration upload was not confirmed.")
         end
 
       end
@@ -169,14 +166,14 @@ module Fastlane
           FastlaneCore::ConfigItem.new(
             key: :json_key,
             env_name: "JSON_KEY_FILE",
-            description: "Json key file for service account authentication",
+            description: "Google credential JSON file (service account, Workload Identity Federation or user credentials); defaults to ADC",
             optional: true,
             type: String
           ),
           FastlaneCore::ConfigItem.new(
             key: :json_key_data,
             env_name: "JSON_KEY_DATA",
-            description: "Json key data for service account authentication",
+            description: "Google credential JSON data; defaults to Application Default Credentials when omitted",
             optional: true,
             type: Hash
           ),
