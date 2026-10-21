@@ -87,3 +87,29 @@ For more information about how the `fastlane` plugin system works, check out the
 ## About _fastlane_
 
 _fastlane_ is the easiest way to automate beta deployments and releases for your iOS and Android apps. To learn more, check out [fastlane.tools](https://fastlane.tools).
+
+### Workload Identity Federation and Application Default Credentials
+
+When `json_key` and `json_key_data` are omitted, the upload action uses
+[Application Default Credentials](https://cloud.google.com/docs/authentication/application-default-credentials).
+For GitHub Actions, authenticate with `google-github-actions/auth` using a
+Workload Identity provider and service account, with `create_credentials_file`
+and `export_environment_variables` enabled. Then call:
+
+```ruby
+upload_google_data_safety(
+    csv_file: "data_safety_export.csv",
+    package_name: "my.package.name"
+)
+```
+
+No service-account private key or separately exported access token is required.
+Explicit `json_key` files also accept `external_account` Workload Identity and
+`authorized_user` credentials alongside existing `service_account` keys. The
+Android Publisher OAuth scope is requested for all credential types. The service
+account still needs the app's **Manage policy declarations** permission in Play
+Console; Cloud IAM authentication does not grant Play Console access.
+
+Non-success API responses fail the lane. If a request times out, inspect the
+current declaration in Play Console before retrying: the upload may have reached
+Google even when no response was received.
