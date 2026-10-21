@@ -84,9 +84,13 @@ module Fastlane
                  Google::Auth.get_application_default(scope)
                end
 
-        token = auth.fetch_access_token!
+        # External-account refresh returns a listener result, not a token response Hash.
+        # All googleauth credential types expose the refreshed token through access_token.
+        auth.fetch_access_token!
+        token = auth.access_token
+        UI.user_error!('Google authentication did not provide an access token.') unless token.is_a?(String) && !token.empty?
 
-        token
+        { 'access_token' => token }
       end
 
       def self.send_data_safety_sheet(package_name: nil, auth_token: nil, csv_content: nil, debug: false)
